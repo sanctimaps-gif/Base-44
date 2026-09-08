@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+npm-debug.log*
+.DS_Store
+.vite/
+coverage/
+
+# Donnees locales generees a l'execution
+packages/server/data/
+!packages/server/data/.gitkeep

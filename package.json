@@ -1,0 +1,26 @@
+{
+  "name": "base-44",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Base 44 — plateforme de creation d'applications pilotee par une IA autonome",
+  "type": "module",
+  "workspaces": [
+    "packages/engine",
+    "packages/server",
+    "packages/web"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w @base44/server\" \"npm run dev -w @base44/web\"",
+    "dev:api": "npm run dev -w @base44/server",
+    "dev:web": "npm run dev -w @base44/web",
+    "build": "npm run build -w @base44/web",
+    "start": "npm run start -w @base44/server",
+    "test": "npm run test -w @base44/engine"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

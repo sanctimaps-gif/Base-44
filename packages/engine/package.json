@@ -1,0 +1,18 @@
+{
+  "name": "@base44/engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Moteur d'IA autonome de Base 44 — aucune dependance, aucun appel a une IA tierce",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./spec": "./src/planner/spec.js",
+    "./synth": "./src/synth/index.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {},
+  "license": "UNLICENSED"
+}
