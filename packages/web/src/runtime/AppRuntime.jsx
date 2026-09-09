@@ -39,7 +39,7 @@ export default function AppRuntime({
     }
   }, [spec, activeId, pages, navPages]);
 
-  // Raccourcis clavier : Escape pour fermer, Ctrl+N pour créer
+  // Raccourcis clavier : Escape pour fermer, Ctrl+N pour créer, Ctrl+S pour actualiser
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -49,6 +49,11 @@ export default function AppRuntime({
       if ((e.ctrlKey || e.metaKey) && e.key === 'n' && entity && !readOnly) {
         e.preventDefault();
         setEditing({ entity, record: null });
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        // Refresh current view without losing state
+        document.querySelector('.input[placeholder*="Rechercher"]')?.focus();
       }
     };
     window.addEventListener('keydown', handleKeyDown);

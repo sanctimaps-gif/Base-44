@@ -96,7 +96,7 @@ export function ListView({ entity, rows, related, onEdit, onDelete, readOnly }) 
       <EmptyState
         icon={entity.icon}
         title={`Aucun enregistrement dans ${entity.labelPlural.toLowerCase()}`}
-        hint="Ajoutez-en un pour commencer."
+        hint="Utilisez le bouton Ajouter en haut pour créer le premier."
       />
     );
   }
