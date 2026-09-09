@@ -39,29 +39,24 @@ export default function AppRuntime({
     }
   }, [spec, activeId, pages, navPages]);
 
-  // Raccourcis clavier : Escape pour fermer, Ctrl+N pour créer, Ctrl+S pour actualiser
+  const page = pages.find((p) => p.id === activeId) || pages[0];
+  const entity = page?.entity ? spec.entities.find((e) => e.name === page.entity) : null;
+
+  // Raccourcis clavier : Escape ferme les fenetres, Ctrl+N cree un enregistrement.
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        if (editing) setEditing(null);
-        if (confirming) setConfirming(null);
+        setEditing(null);
+        setConfirming(null);
       }
       if ((e.ctrlKey || e.metaKey) && e.key === 'n' && entity && !readOnly) {
         e.preventDefault();
         setEditing({ entity, record: null });
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        // Refresh current view without losing state
-        document.querySelector('.input[placeholder*="Rechercher"]')?.focus();
-      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editing, confirming, entity, readOnly]);
-
-  const page = pages.find((p) => p.id === activeId) || pages[0];
-  const entity = page?.entity ? spec.entities.find((e) => e.name === page.entity) : null;
+  }, [entity, readOnly]);
 
   // Index des entites liees, pour resoudre les relations a l'affichage.
   const related = useMemo(() => {

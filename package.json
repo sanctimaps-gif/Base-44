@@ -13,7 +13,7 @@
     "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w @base44/server\" \"npm run dev -w @base44/web\"",
     "dev:api": "npm run dev -w @base44/server",
     "dev:web": "npm run dev -w @base44/web",
-    "build": "npm install && npm run build -w @base44/web && echo '✅ Build terminé'",
+    "build": "npm run build -w @base44/web",
     "start": "npm run start -w @base44/server",
     "test": "npm run test -w @base44/engine"
   },

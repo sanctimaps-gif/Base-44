@@ -1,8 +1,29 @@
-/** Client HTTP de l'API Base 44. */
+/**
+ * Client de l'API Base 44.
+ *
+ * Deux modes, transparents pour le reste de l'application :
+ * - **serveur** : appels HTTP vers l'API Express (developpement, ou build avec
+ *   `VITE_API_URL` renseigne) ;
+ * - **autonome** : sur un hebergement statique (GitHub Pages), aucune API n'est
+ *   joignable — les memes routes sont alors executees dans le navigateur par
+ *   `localBackend`, avec persistance dans `localStorage`.
+ */
 
-const BASE = '/api';
+const API_URL = import.meta.env.VITE_API_URL;
+const BASE = API_URL ? `${String(API_URL).replace(/\/$/, '')}/api` : '/api';
+
+/** Sans API distante, un build de production n'a aucun serveur a appeler. */
+export const STANDALONE = !API_URL && import.meta.env.PROD;
+
+let backend = null;
+async function localRequest(path, options) {
+  if (!backend) backend = await import('./localBackend.js');
+  return backend.localRequest(path, options);
+}
 
 async function request(path, { method = 'GET', body, signal } = {}) {
+  if (STANDALONE) return localRequest(path, { method, body });
+
   const response = await fetch(BASE + path, {
     method,
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,

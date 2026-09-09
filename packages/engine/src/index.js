@@ -18,6 +18,7 @@ import {
   planRemove, planRename, planSetTheme,
 } from './planner/planner.js';
 import { validateSpec, repairSpec, createSpec } from './planner/spec.js';
+import { coerceRecord, checkUnique } from './planner/records.js';
 import { generateSampleData } from './knowledge/sampleData.js';
 import { synthProject } from './synth/index.js';
 import { BLUEPRINTS } from './knowledge/blueprints.js';
@@ -344,5 +345,5 @@ export function createEngine(options) {
 export {
   INTENTS, classify, detectDomain, Memory, createSpec,
   validateSpec, repairSpec, generateSampleData, synthProject, BLUEPRINTS,
-  isFullyIndependent, listProviders,
+  isFullyIndependent, listProviders, coerceRecord, checkUnique,
 };

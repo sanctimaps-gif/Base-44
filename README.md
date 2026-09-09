@@ -43,6 +43,16 @@ n'est enregistre, l'IA reste 100 % autonome — c'est le comportement par defaut
 
 ---
 
+## Version en ligne
+
+**https://sanctimaps-gif.github.io/Base-44/**
+
+Le studio y tourne en **mode autonome** : aucun serveur n'est necessaire, le
+moteur d'IA s'execute dans le navigateur et vos applications sont conservees
+dans le stockage local du navigateur. Rien n'est envoye nulle part.
+
+---
+
 ## Demarrage
 
 ```bash
@@ -81,8 +91,29 @@ packages/
 └── web/        Studio React + Vite
     ├── runtime/      rendu des applications generees
     ├── pages/        accueil, builder, apercu, modeles, moteur, parametres
+    ├── lib/          client d'API + backend autonome (navigateur)
     └── styles/       systeme de design (theme clair/sombre)
 ```
+
+### Deux modes d'execution
+
+Le studio parle toujours aux memes routes ; seule leur implementation change.
+
+| Mode | Quand | Donnees |
+| --- | --- | --- |
+| Serveur | `npm run dev`, ou build avec `VITE_API_URL` | API Express, fichiers JSON |
+| Autonome | build statique sans `VITE_API_URL` (GitHub Pages) | moteur dans le navigateur, `localStorage` |
+
+Le moteur n'ayant aucune dependance ni appel reseau, il s'execute a l'identique
+des deux cotes ; les regles de validation sont partagees
+(`engine/src/planner/records.js`), si bien qu'un enregistrement refuse par
+l'API l'est aussi en mode autonome.
+
+### Deploiement
+
+Un push sur la branche declenche `.github/workflows/deploy.yml` : tests, build
+statique, publication sur GitHub Pages. Cote depot, il suffit d'activer
+**Settings → Pages → Source : GitHub Actions**.
 
 ### Le pivot : l'AppSpec
 

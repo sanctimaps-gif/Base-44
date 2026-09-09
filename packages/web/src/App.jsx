@@ -1,6 +1,6 @@
 /** Routage du studio Base 44. */
 
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Sidebar } from './components/Shell.jsx';
 import { ThemeProvider } from './lib/theme.jsx';
 
@@ -36,9 +36,11 @@ function Layout() {
 export default function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
+      {/* Routage par ancre : un hebergement statique ne peut pas reecrire les
+          URL profondes vers index.html. */}
+      <HashRouter>
         <Layout />
-      </BrowserRouter>
+      </HashRouter>
     </ThemeProvider>
   );
 }
