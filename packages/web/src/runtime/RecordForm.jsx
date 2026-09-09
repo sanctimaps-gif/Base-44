@@ -3,7 +3,7 @@
  * Chaque type de champ produit le controle adapte.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '../components/Icon.jsx';
 import { emptyValue, inputType, toInputDate, toInputDateTime } from '../lib/format.js';
 
@@ -31,6 +31,8 @@ export default function RecordForm({ entity, record, entities = {}, onSubmit, on
         errors[field.name] = 'Doit être un nombre.';
       } else if (field.type === 'currency' && values[field.name] !== '' && isNaN(Number(values[field.name]))) {
         errors[field.name] = 'Doit être un montant valide.';
+      } else if (field.type === 'url' && values[field.name] && !isValidUrl(values[field.name])) {
+        errors[field.name] = 'URL invalide.';
       }
     }
 
@@ -42,6 +44,22 @@ export default function RecordForm({ entity, record, entities = {}, onSubmit, on
     setFieldErrors({});
     onSubmit(values);
   }
+
+  function handleReset() {
+    setValues(buildInitialValues(entity, record));
+    setFieldErrors({});
+  }
+
+  // Soumettre avec Ctrl+Entrée
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !saving) {
+        document.querySelector('form')?.requestSubmit?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [saving]);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -59,8 +77,15 @@ export default function RecordForm({ entity, record, entities = {}, onSubmit, on
       </div>
 
       <div className="modal__footer">
-        <button type="button" className="btn" onClick={onCancel}>Annuler</button>
-        <button type="submit" className="btn btn--primary" disabled={saving}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button type="button" className="btn" onClick={onCancel}>Annuler</button>
+          {record && (
+            <button type="button" className="btn btn--ghost" onClick={handleReset}>
+              Reinitialiser
+            </button>
+          )}
+        </div>
+        <button type="submit" className="btn btn--primary" disabled={saving} title="Ctrl+Entrée pour soumettre">
           {saving ? <span className="spinner" /> : <Icon name="check" size={14} />}
           {record ? 'Mettre a jour' : 'Creer'}
         </button>
@@ -93,6 +118,15 @@ function isEmpty(value) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isValidUrl(url) {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Rend le controle adapte au type du champ. */

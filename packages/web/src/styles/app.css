@@ -995,5 +995,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .sidebar { display: none; }
   .content__inner { padding: 18px 16px 40px; }
   .runtime { grid-template-columns: 1fr; }
-  .runtime__nav { border-right: 0; border-bottom: 1px solid var(--border); }
+  .runtime__nav { border-right: 0; border-bottom: 1px solid var(--border); height: auto; overflow-x: auto; flex-direction: row; }
+  .nav-item { min-width: 140px; }
+  .table { font-size: 12px; }
+  .table th, .table td { padding: 8px 6px; }
+  .btn { padding: 7px 12px; font-size: 12px; }
+  .modal { max-width: 90vw; }
+  .row { flex-wrap: wrap; }
+  .field__label { font-size: 13px; }
 }

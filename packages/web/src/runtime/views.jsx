@@ -5,7 +5,7 @@
  * pour une application donnee.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Icon from '../components/Icon.jsx';
 import { formatValue, statusTone } from '../lib/format.js';
 
@@ -48,8 +48,28 @@ export function ListView({ entity, rows, related, onEdit, onDelete, readOnly }) 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortField, setSortField] = useState(null);
   const [sortAsc, setSortAsc] = useState(true);
+  const [selected, setSelected] = useState(new Set());
 
   const columns = entity.fields.slice(0, 6);
+
+  const exportCSV = () => {
+    const header = columns.map((f) => `"${f.label}"`).join(',');
+    const lines = filtered.map((row) => {
+      return columns.map((f) => {
+        const val = row[f.name];
+        const str = Array.isArray(val) ? val.join('; ') : String(val ?? '');
+        return `"${str.replace(/"/g, '""')}"`;
+      }).join(',');
+    });
+    const csv = [header, ...lines].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${entity.name}-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   let filtered = filterRows(rows, searchQuery, entity);
 
@@ -84,7 +104,7 @@ export function ListView({ entity, rows, related, onEdit, onDelete, readOnly }) 
   return (
     <div className="card">
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--surface-2)' }}>
-        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+        <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 8 }}>
           <Icon name="search" size={16} style={{ opacity: 0.5 }} />
           <input
             type="text"
@@ -100,7 +120,22 @@ export function ListView({ entity, rows, related, onEdit, onDelete, readOnly }) 
               minWidth: 0,
             }}
           />
+          {filtered.length > 0 && (
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={exportCSV}
+              title="Exporter en CSV"
+            >
+              <Icon name="download" size={14} />
+            </button>
+          )}
         </div>
+        {searchQuery && (
+          <p className="small faint" style={{ margin: 0 }}>
+            {filtered.length} sur {rows.length} résultat(s)
+          </p>
+        )}
       </div>
 
       {filtered.length === 0 ? (

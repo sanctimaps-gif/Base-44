@@ -72,5 +72,16 @@ export const api = {
 
   export: {
     project: (id) => request(`/apps/${id}/export`),
+    csv: async (appId, entity, rows, fields) => {
+      const header = fields.map((f) => `"${f.label}"`).join(',');
+      const lines = rows.map((row) => {
+        return fields.map((f) => {
+          const val = row[f.name];
+          const str = Array.isArray(val) ? val.join('; ') : String(val ?? '');
+          return `"${str.replace(/"/g, '""')}"`;
+        }).join(',');
+      });
+      return [header, ...lines].join('\n');
+    },
   },
 };
