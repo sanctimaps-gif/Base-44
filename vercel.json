@@ -1,6 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "packages/web/dist",
-  "installCommand": "npm install"
+  "installCommand": "npm install --legacy-peer-deps",
+  "buildCommand": "npm install && npm run build -w @base44/web",
+  "outputDirectory": "./packages/web/dist",
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "regions": ["cdg1"],
+  "functions": {
+    "api/**": {
+      "maxDuration": 60
+    }
+  }
 }
