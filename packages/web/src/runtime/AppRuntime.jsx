@@ -39,6 +39,22 @@ export default function AppRuntime({
     }
   }, [spec, activeId, pages, navPages]);
 
+  // Raccourcis clavier : Escape pour fermer, Ctrl+N pour créer
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (editing) setEditing(null);
+        if (confirming) setConfirming(null);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n' && entity && !readOnly) {
+        e.preventDefault();
+        setEditing({ entity, record: null });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editing, confirming, entity, readOnly]);
+
   const page = pages.find((p) => p.id === activeId) || pages[0];
   const entity = page?.entity ? spec.entities.find((e) => e.name === page.entity) : null;
 

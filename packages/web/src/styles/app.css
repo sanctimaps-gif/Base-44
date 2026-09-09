@@ -292,6 +292,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
+.input.is-error, .textarea.is-error, .select.is-error {
+  border-color: var(--danger);
+}
+
+.input.is-error:focus, .textarea.is-error:focus, .select.is-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
 .textarea { resize: vertical; min-height: 76px; font-family: inherit; }
 
 .checkbox { display: flex; align-items: center; gap: 8px; cursor: pointer; }

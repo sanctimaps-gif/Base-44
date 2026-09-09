@@ -5,6 +5,7 @@
  * pour une application donnee.
  */
 
+import { useState } from 'react';
 import Icon from '../components/Icon.jsx';
 import { formatValue, statusTone } from '../lib/format.js';
 
@@ -29,10 +30,46 @@ function displayValue(field, record, related) {
   return formatValue(value, field.type);
 }
 
+/** Filtre les enregistrements selon la recherche. */
+function filterRows(rows, searchQuery, entity) {
+  if (!searchQuery.trim()) return rows;
+  const query = searchQuery.toLowerCase();
+  return rows.filter((row) => {
+    return entity.fields.some((field) => {
+      const value = String(row[field.name] || '').toLowerCase();
+      return value.includes(query);
+    });
+  });
+}
+
 /* ------------------------------------------------------------------ Liste */
 
 export function ListView({ entity, rows, related, onEdit, onDelete, readOnly }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortField, setSortField] = useState(null);
+  const [sortAsc, setSortAsc] = useState(true);
+
   const columns = entity.fields.slice(0, 6);
+
+  let filtered = filterRows(rows, searchQuery, entity);
+
+  if (sortField) {
+    filtered = [...filtered].sort((a, b) => {
+      const aVal = a[sortField] ?? '';
+      const bVal = b[sortField] ?? '';
+      const cmp = String(aVal).localeCompare(String(bVal));
+      return sortAsc ? cmp : -cmp;
+    });
+  }
+
+  const toggleSort = (fieldName) => {
+    if (sortField === fieldName) {
+      setSortAsc(!sortAsc);
+    } else {
+      setSortField(fieldName);
+      setSortAsc(true);
+    }
+  };
 
   if (!rows.length) {
     return (
@@ -46,49 +83,89 @@ export function ListView({ entity, rows, related, onEdit, onDelete, readOnly }) 
 
   return (
     <div className="card">
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              {columns.map((field) => <th key={field.name}>{field.label}</th>)}
-              {!readOnly && <th style={{ width: 90 }} />}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id}>
-                {columns.map((field) => (
-                  <td key={field.name}>
-                    <Cell field={field} row={row} related={related} />
-                  </td>
-                ))}
-                {!readOnly && (
-                  <td>
-                    <div className="table__actions">
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--icon"
-                        title="Modifier"
-                        onClick={() => onEdit(row)}
-                      >
-                        <Icon name="edit" size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--icon"
-                        title="Supprimer"
-                        onClick={() => onDelete(row)}
-                      >
-                        <Icon name="trash" size={14} />
-                      </button>
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--surface-2)' }}>
+        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+          <Icon name="search" size={16} style={{ opacity: 0.5 }} />
+          <input
+            type="text"
+            placeholder="Rechercher..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              flex: 1,
+              border: 'none',
+              background: 'transparent',
+              font: 'inherit',
+              outline: 'none',
+              minWidth: 0,
+            }}
+          />
+        </div>
       </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-2)' }}>
+          Aucun résultat pour "{searchQuery}"
+        </div>
+      ) : (
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                {columns.map((field) => (
+                  <th
+                    key={field.name}
+                    style={{ cursor: 'pointer', userSelect: 'none' }}
+                    onClick={() => toggleSort(field.name)}
+                    title="Cliquer pour trier"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      {field.label}
+                      {sortField === field.name && (
+                        <Icon name={sortAsc ? 'chevron-up' : 'chevron-down'} size={12} />
+                      )}
+                    </div>
+                  </th>
+                ))}
+                {!readOnly && <th style={{ width: 90 }} />}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((row) => (
+                <tr key={row.id}>
+                  {columns.map((field) => (
+                    <td key={field.name}>
+                      <Cell field={field} row={row} related={related} />
+                    </td>
+                  ))}
+                  {!readOnly && (
+                    <td>
+                      <div className="table__actions">
+                        <button
+                          type="button"
+                          className="btn btn--ghost btn--icon"
+                          title="Modifier"
+                          onClick={() => onEdit(row)}
+                        >
+                          <Icon name="edit" size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn--ghost btn--icon"
+                          title="Supprimer"
+                          onClick={() => onDelete(row)}
+                        >
+                          <Icon name="trash" size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

@@ -9,43 +9,49 @@ import { emptyValue, inputType, toInputDate, toInputDateTime } from '../lib/form
 
 export default function RecordForm({ entity, record, entities = {}, onSubmit, onCancel, saving }) {
   const [values, setValues] = useState(() => buildInitialValues(entity, record));
-  const [errors, setErrors] = useState([]);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   function setField(name, value) {
     setValues((prev) => ({ ...prev, [name]: value }));
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   }
 
   function handleSubmit(event) {
     event.preventDefault();
 
-    // Validation cote client : l'API revalide de toute facon.
-    const missing = entity.fields
-      .filter((f) => f.required && isEmpty(values[f.name]))
-      .map((f) => `${f.label} est obligatoire.`);
+    const errors = {};
+    for (const field of entity.fields) {
+      if (field.required && isEmpty(values[field.name])) {
+        errors[field.name] = `${field.label} est obligatoire.`;
+      } else if (field.type === 'email' && values[field.name] && !isValidEmail(values[field.name])) {
+        errors[field.name] = 'Adresse email invalide.';
+      } else if (field.type === 'number' && values[field.name] !== '' && isNaN(Number(values[field.name]))) {
+        errors[field.name] = 'Doit être un nombre.';
+      } else if (field.type === 'currency' && values[field.name] !== '' && isNaN(Number(values[field.name]))) {
+        errors[field.name] = 'Doit être un montant valide.';
+      }
+    }
 
-    if (missing.length) {
-      setErrors(missing);
+    if (Object.keys(errors).length) {
+      setFieldErrors(errors);
       return;
     }
 
-    setErrors([]);
+    setFieldErrors({});
     onSubmit(values);
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="modal__body">
-        {errors.length > 0 && (
-          <div className="badge badge--danger" style={{ marginBottom: 14, display: 'block', padding: '8px 12px' }}>
-            {errors.join(' ')}
-          </div>
-        )}
-
         {entity.fields.map((field) => (
           <FieldControl
             key={field.name}
             field={field}
             value={values[field.name]}
+            error={fieldErrors[field.name]}
             options={field.type === 'relation' ? entities[field.ref] || [] : null}
             onChange={(v) => setField(field.name, v)}
           />
@@ -85,8 +91,12 @@ function isEmpty(value) {
   return value === '' || value === null || value === undefined;
 }
 
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 /** Rend le controle adapte au type du champ. */
-function FieldControl({ field, value, options, onChange }) {
+function FieldControl({ field, value, error, options, onChange }) {
   const id = `field-${field.name}`;
 
   const label = (
@@ -96,23 +106,29 @@ function FieldControl({ field, value, options, onChange }) {
     </label>
   );
 
+  const fieldWrapperStyle = {
+    marginBottom: error ? '12px' : '16px',
+  };
+
   switch (field.type) {
     case 'longtext':
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           {label}
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
           <textarea
             id={id}
-            className="textarea"
+            className={`textarea ${error ? 'is-error' : ''}`}
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
           />
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
 
     case 'boolean':
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           <label className="checkbox" htmlFor={id}>
             <input
               id={id}
@@ -122,27 +138,32 @@ function FieldControl({ field, value, options, onChange }) {
             />
             <span className="field__label" style={{ margin: 0 }}>{field.label}</span>
           </label>
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
 
     case 'select':
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           {label}
-          <select id={id} className="select" value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
+          <select id={id} className={`select ${error ? 'is-error' : ''}`} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
             <option value="">—</option>
             {(field.options || []).map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
 
     case 'multiselect': {
       const selected = Array.isArray(value) ? value : [];
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           {label}
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
           <div className="row wrap" style={{ gap: 6 }}>
             {(field.options || []).map((option) => {
               const active = selected.includes(option);
@@ -165,27 +186,31 @@ function FieldControl({ field, value, options, onChange }) {
               );
             })}
           </div>
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
     }
 
     case 'relation':
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           {label}
-          <select id={id} className="select" value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
+          <select id={id} className={`select ${error ? 'is-error' : ''}`} value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
             <option value="">—</option>
             {(options || []).map((row) => (
               <option key={row.id} value={row.id}>{row.__label || row.id}</option>
             ))}
           </select>
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
 
     case 'rating':
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           {label}
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
           <div className="row" style={{ gap: 4 }}>
             {[1, 2, 3, 4, 5].map((n) => (
               <button
@@ -200,33 +225,38 @@ function FieldControl({ field, value, options, onChange }) {
               </button>
             ))}
           </div>
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
 
     case 'json':
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           {label}
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
           <textarea
             id={id}
-            className="textarea mono"
+            className={`textarea mono ${error ? 'is-error' : ''}`}
             value={typeof value === 'object' ? JSON.stringify(value, null, 2) : (value ?? '')}
             onChange={(e) => onChange(e.target.value)}
           />
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
 
     default:
       return (
-        <div className="field">
+        <div className="field" style={fieldWrapperStyle}>
           {label}
+          {field.help && <p className="small faint" style={{ marginTop: 4 }}>{field.help}</p>}
           <input
             id={id}
-            className="input"
+            className={`input ${error ? 'is-error' : ''}`}
             type={inputType(field.type)}
             value={value ?? ''}
             onChange={(e) => onChange(e.target.value)}
           />
+          {error && <span className="small" style={{ color: 'var(--error)', marginTop: 4, display: 'block' }}>{error}</span>}
         </div>
       );
   }
